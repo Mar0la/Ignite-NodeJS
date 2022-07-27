@@ -11,64 +11,56 @@ const users = [];
 
 function checksExistsUserAccount(request, response, next) {
   const { username } = request.headers
-
-  const user = users.find(user => user.username ===  username)
-
-  if(!user) {
-    return response.status(404).json({ error: "User does not exists" })
-  }
+  
+  const user = users.find(user => user.username === username)
+  if(!user) return response.status(404).json({ error:"user not exist"})
 
   request.user = user
-
   return next()
 }
 
-function checksCreateTodosUserAvailability(request, response, next) {
+function checksCreateTodosUserAvailability(request, response, next) { 
   const { user } = request
-
-  if(user.pro === false && user.todos.length < 10 || user.pro === true) {
-
+  if((user.pro === false && user.todos.length < 10) || user.pro === true) {
     return next()
-  }
-  return response.status(403).json({ error: "Free user" })
 
+  }
+  return response.status(403).json({ error:"update to pro"})
+
+} 
+ 
+function checksTodoExists(request, response, next) { //diamond
+ const { username } = request.headers
+ const { id } = request.params
+
+
+ const validUser = users.find(user => user.username === username)
+ if(!validUser) {
+  return response.status(404).json({ error:"User not Found"})
 }
 
-function checksTodoExists(request, response, next) {
-  const {username} = request.headers
-  const {id} = request.params
-
-  const idValid = users.todos.find(todo => todo.id === id)
-  if(!idValid) {
-    return response.status(404).json({ error: "ID not found"}) 
+ const validId = /^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i.test(id)
+  if(!validId) {
+    return response.status(400).json({ error: "id isn't UUID type"})
   }
+ 
+ const validTodo = validUser.todos.find(todo => todo.id === id)
+ if(!validTodo) return response.status(404).json({ error:"Todo not found"})
 
-  const userExist = users.find(user => user.username === username)
-  if(!userExist) {
-    return response.status(404).json({ error: "User not found"})
-  }
+ request.user = validUser;
+ request.todo = validTodo;
 
-  const todoExist = userExist.todos.find(todo => todo.id === id)
-  if(!todoExist) {
-    return response.status(404).json({ error: "Todo not found" })
-  }
-
-  request.user = userExist
-  request.todo = todoExist
-  
-  return next()
+ return next()
 }
 
-function findUserById(request, response, next) {
-  const { id } = request.params
+function findUserById(request, response, next) {//laxuscheckId
+ const { id } = request.params
 
-  const userExist = users.find(user => user.id === id)
-  if(!userExist) {
-    return response.status(404).json({ error: "User does not exist"})
-  }
-  
-  request.user = userExist
-  return next()
+ const checkId = users.find(user => user.id === id)
+ if(!checkId) return response.status(404).json({ error:"User not found"})
+
+ request.user = checkId
+ return next()
 }
 
 app.post('/users', (request, response) => {
