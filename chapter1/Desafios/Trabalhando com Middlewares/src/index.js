@@ -53,7 +53,7 @@ function checksTodoExists(request, response, next) { //diamond
  return next()
 }
 
-function findUserById(request, response, next) {//laxuscheckId
+function findUserById(request, response, next) {
  const { id } = request.params
 
  const checkId = users.find(user => user.id === id)
